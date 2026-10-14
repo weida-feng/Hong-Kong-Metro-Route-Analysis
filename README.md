@@ -1,38 +1,42 @@
 # Hong Kong Metro Route Analysis
 
-用 Python、NetworkX 和 Matplotlib 构建香港地铁多重图，对比**最少乘车区间**与**最短距离**两种路径策略，并可视化线路与换乘站。
+English | [简体中文](README.zh-CN.md)
 
-项目使用 **2023-02-01 的原始数据快照**，包含 10 条线路、96 个建模节点和 112 条连接。它是一个图建模与路径分析项目；站点数受合并站点等建模假设影响，不代表当前港铁站点统计。
+A Python project that models the Hong Kong metro as a multigraph using NetworkX and Matplotlib. It compares routes that minimize **the number of station-to-station segments** or **total distance weight**, and visualizes lines and interchange stations.
 
-## 路径比较：油塘 → 青衣
+The project uses the original **2023-02-01 data snapshot**, covering 10 lines, 96 modeled nodes, and 112 connections. Node counts reflect modeling assumptions, including merged stations, rather than current MTR station totals.
 
-![两种路径策略比较](images/route_comparison.png)
+## Route comparison: Yau Tong → Tsing Yi
 
-| 策略 | 算法 | 乘车区间数 | 站点数（含起终点） | 距离权重 |
+![Comparison of routes with the fewest segments and the shortest distance](images/route_comparison.png)
+
+| Strategy | Algorithm | Segments traveled | Stations, including both endpoints | Distance weight |
 | --- | --- | ---: | ---: | ---: |
-| 最少区间 | 无权最短路径 / BFS | 10 | 11 | 20.89 |
-| 最短距离 | Dijkstra | 17 | 18 | 19.00 |
+| Fewest segments | Unweighted shortest path / BFS | 10 | 11 | 20.89 |
+| Shortest distance | Dijkstra | 17 | 18 | 19.00 |
 
-按当前数据，最短距离策略比示例中的最少区间路线多经过 7 个区间，但累计距离权重更小。优化目标不同，会得到不同的路线。
+With this dataset, the shortest-distance route takes 7 more segments than the example route with the fewest segments, but has a lower total distance weight. Different objectives lead to different routes.
 
-- **最少区间：** 油塘 → 鲗鱼涌 → 北角 → 炮台山 → 天后 → 铜锣湾 → 湾仔 → 金钟 → 中环/香港 → 九龙 → 青衣
-- **最短距离：** 油塘 → 蓝田 → 观塘 → 牛头角 → 九龙湾 → 彩虹 → 钻石山 → 黄大仙 → 乐富 → 九龙塘 → 石硖尾 → 太子 → 深水埗 → 长沙湾 → 荔枝角 → 美孚 → 荔景 → 青衣
+Station names in the examples and figures retain the Chinese identifiers used in the original dataset. Yau Tong is `油塘`, and Tsing Yi is `青衣`.
 
-区间数等于路径节点数减一。距离由数据自动累计；在多条线路连接同一对站点时，每段取最小距离权重，与 NetworkX 的加权最短路径语义一致。最少区间可能存在多条并列路线，BFS 返回其中一条，不保证这条路线在并列方案中距离最短。
+- **Fewest segments:** 油塘 → 鲗鱼涌 → 北角 → 炮台山 → 天后 → 铜锣湾 → 湾仔 → 金钟 → 中环/香港 → 九龙 → 青衣
+- **Shortest distance:** 油塘 → 蓝田 → 观塘 → 牛头角 → 九龙湾 → 彩虹 → 钻石山 → 黄大仙 → 乐富 → 九龙塘 → 石硖尾 → 太子 → 深水埗 → 长沙湾 → 荔枝角 → 美孚 → 荔景 → 青衣
 
-## 网络建模与可视化
+The segment count equals the number of nodes in the path minus one. Distance is calculated from the data, taking the minimum weight among parallel edges for each segment, consistent with NetworkX's weighted shortest-path behavior. When multiple routes tie for the fewest segments, BFS returns one of them; it does not additionally minimize distance among those routes.
 
-![香港地铁网络拓扑图](images/network.png)
+## Network model and visualization
 
-- 使用无向 `MultiGraph`，保留不同线路连接同一对站点的平行边。
-- 同名站点共用一个节点，因此不同线路在该站自然连通。每条边显式保存线路编号、名称、颜色和距离权重，每个节点记录所属线路。
-- 按站点所属线路识别换乘站。同一线路的分支站（如上水、将军澳）不会仅因连接多个方向而被误标。
-- 共线路段以不同颜色的弧线表示；两种路径分别绘制，避免重合部分互相覆盖。
-- 使用固定随机种子的拓扑布局，不需要安装 Graphviz。节点位置和图上边长不代表地理坐标或实际距离。
+![Hong Kong metro network topology](images/network.png)
 
-## 运行
+- An undirected `MultiGraph` preserves parallel edges where different lines connect the same pair of stations.
+- Stations with the same name share a node, naturally connecting their lines. Each edge stores its line ID, name, color, and distance weight; each node records its line memberships.
+- Interchanges are identified by membership in multiple lines. Branch stations on a single line, such as `上水` and `将军澳`, are not mislabeled simply because they connect to multiple directions.
+- Shared segments are drawn as separate colored arcs. Route strategies are shown in separate panels so overlapping paths remain visible.
+- A topology layout with a fixed random seed removes the need for Graphviz. Node positions and drawn edge lengths do not represent geographic coordinates or actual distances.
 
-推荐 Python 3.11 或以上。在仓库根目录执行：
+## Getting started
+
+Python 3.11 or later is recommended. From the repository root:
 
 ```bash
 python -m venv .venv
@@ -41,13 +45,13 @@ python -m pip install -r requirements.txt
 python -m jupyterlab Hong_Kong_Metro_test.ipynb
 ```
 
-Windows 的环境激活命令为 `.venv\Scripts\activate`。
+On Windows, activate the environment with `.venv\Scripts\activate` instead.
 
-在 JupyterLab 中选择此虚拟环境对应的 Python 内核，然后从头运行全部单元格。Notebook 会显示分析结果，并将两张图片保存到 `images/`。
+In JupyterLab, select the Python kernel for this virtual environment and run all cells from the beginning. The notebook displays the analysis and saves both figures to `images/`. Its explanatory text is in Chinese.
 
-中文标签需要系统安装中文字体。程序会自动选择常见字体；如果提示缺少字体，可以安装 Noto Sans CJK SC 并重启内核。
+Chinese labels require a Chinese font installed on your system. The plotting code automatically selects from common fonts. If a missing-font warning appears, install Noto Sans CJK SC and restart the kernel.
 
-只查询路径也可以直接使用：
+You can also query routes directly:
 
 ```python
 from metro import compare_routes, load_network
@@ -58,43 +62,45 @@ for result in compare_routes(graph, "油塘", "青衣"):
     print(" → ".join(result["path"]))
 ```
 
-运行检查：
+Run the checks:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-检查覆盖共线路段的线路归属、分支站识别、示例路径指标、平行边距离选择、同站查询、未知及不可达站点，以及无效数据输入。
+The checks cover line identity on shared segments, branch-station classification, example route metrics, distance selection among parallel edges, identical endpoints, unknown and unreachable stations, and invalid input data.
 
-## 数据与边界
+## Data and limitations
 
-原始文件保留 UTF-16 编码：
+The original files retain their UTF-16 encoding:
 
-| 文件 | 内容 | 原始文件标注的来源 |
+| File | Contents | Source stated in the original file |
 | --- | --- | --- |
-| `Hong_Kong_Metro_Lines_ZHCN.txt` | 线路编号、名称、颜色 | 港铁官网 |
-| `Hong_Kong_Metro_Routes_ZHCN.txt` | 相邻站点、距离权重、线路编号 | 维基百科 |
+| `Hong_Kong_Metro_Lines_ZHCN.txt` | Line IDs, names, and colors | MTR website |
+| `Hong_Kong_Metro_Routes_ZHCN.txt` | Adjacent stations, distance weights, and line IDs | Wikipedia |
 
-原始文件未记录具体来源页面及版本，本次整理未更新线路或重新核验距离。距离权重沿用原始数值，不能视为行程时间。
+The original files do not record specific source pages or versions. This update preserves the snapshot without refreshing the network or independently verifying the distances. Distance weights retain their original numeric values and do not represent travel times.
 
-建模沿用原项目的简化：
+The model retains the original project's simplifications:
 
-- 中环/香港、尖沙咀/尖东分别合并为一个节点，未计算站内步行距离。
-- 不含高铁和轻铁；机场快线包含在数据中，但未建模其乘车及换乘限制。
-- 未考虑候车时间、运行时间、换乘成本、票价、方向和班次，线路按双向可通行处理。
-- 马场站相邻连接保留原数据增加的 `0.001` 权重，这是启发式调整，不能替代特殊班次建模。
-- 换乘站标注表示多条线路在模型中相交；当前路径查询不计算实际换乘次数，也不提供最快到达策略。
+- `中环/香港` and `尖沙咀/尖东` each merge two stations into one node, without accounting for walking distance within the interchange.
+- High-speed rail and light rail are excluded. Airport Express is included, but its boarding and transfer restrictions are not modeled.
+- Waiting times, running times, transfer costs, fares, directions, and timetables are not considered. All connections are treated as bidirectional.
+- Connections adjacent to `马场` retain the original extra `0.001` weight. This heuristic does not replace modeling special service schedules.
+- Interchange markers indicate that multiple lines meet in the model. Route queries do not calculate actual transfer counts or the fastest journey.
 
-## 仓库结构
+## Repository structure
 
 ```text
-Hong_Kong_Metro_test.ipynb       分步讲解、路径比较与图片导出
-metro.py                       数据读取、建图、路径计算和绘图
-Hong_Kong_Metro_Lines_ZHCN.txt   原始线路数据
-Hong_Kong_Metro_Routes_ZHCN.txt  原始站间连接数据
-images/                        README 使用的示例图片
-tests/test_metro.py             核心行为检查
-requirements.txt               运行依赖
+README.md                      English project overview
+README.zh-CN.md                Chinese project overview
+Hong_Kong_Metro_test.ipynb      Guided analysis, route comparison, and figure export
+metro.py                       Data loading, graph construction, routing, and plotting
+Hong_Kong_Metro_Lines_ZHCN.txt   Original line data
+Hong_Kong_Metro_Routes_ZHCN.txt  Original station connection data
+images/                        Example figures used in the README
+tests/test_metro.py             Core behavior checks
+requirements.txt               Runtime dependencies
 ```
 
-原始探索完成于 2023 年。本次整理保留原数据与两种路径策略，补充线路属性、修正换乘站识别和结果表达，并改善运行与展示方式。
+The original exploration dates to 2023. This update preserves the data and both routing strategies, adds explicit line attributes, corrects interchange detection and result reporting, and improves setup and presentation.
